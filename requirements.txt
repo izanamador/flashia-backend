@@ -1,0 +1,6 @@
+Flask
+torch
+torchvision
+diffusers
+requests
+Pillow
