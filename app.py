@@ -1,47 +1,35 @@
-import PIL
-import requests
-import torch
-from flask import Flask, request, jsonify, send_file
-from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
-import io
+from flask import Flask, render_template, request, redirect, url_for
+import os
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'uploads/'
 
-# Load model
-model_id = "timbrooks/instruct-pix2pix"
-pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
-pipe.to("cuda")
-pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+# Ensure the upload folder exists
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
-def download_image(url):
-    image = PIL.Image.open(requests.get(url, stream=True).raw)
-    image = PIL.ImageOps.exif_transpose(image)
-    image = image.convert("RGB")
-    return image
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-@app.route('/generate', methods=['POST'])
-def generate_image():
-    data = request.json
-    image_url = data.get('url')
-    prompt = data.get('prompt')
+@app.route('/upload', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return "No file part", 400
 
-    # Download the image
-    image = download_image(image_url)
-
-    # Generate new image
-    images = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
+    file = request.files['file']
     
-    # Save the generated image to a BytesIO object
-    img_byte_arr = io.BytesIO()
-    images[0].save(img_byte_arr, format='PNG')
-    img_byte_arr.seek(0)  # Go to the beginning of the BytesIO object
-    
-    return send_file(img_byte_arr, mimetype='image/png')
+    if file.filename == '':
+        return "No selected file", 400
 
-@app.route('/output', methods=['GET'])
-def get_image():
-    # This is just a placeholder; implement your logic to return the generated image if needed.
-    return jsonify({"message": "This is a placeholder for the output endpoint."})
+    if file:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(filepath)
+        return redirect(url_for('view_image', filename=file.filename))
+
+@app.route('/view/<filename>')
+def view_image(filename):
+    return render_template('view.html', filename=filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
