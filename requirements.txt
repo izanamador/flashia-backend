@@ -1,6 +1,3 @@
-Flask
-torch
-torchvision
-diffusers
-requests
-Pillow
+Flask==2.2.5
+Werkzeug==2.2.3
+Pillow==9.1.1
