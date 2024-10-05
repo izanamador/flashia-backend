@@ -11,7 +11,7 @@ app = Flask(__name__)
 # Load the model
 model_id = "timbrooks/instruct-pix2pix"
 pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
-pipe.to("cuda")
+pipe.to("cpu")
 pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 
 def download_image(url):
