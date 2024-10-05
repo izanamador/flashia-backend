@@ -2,7 +2,7 @@ import os
 import PIL
 import requests
 import torch
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_file
 from PIL import ImageOps
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
@@ -37,10 +37,20 @@ def generate_image():
 
     # Generate images
     images = pipe(prompt, image=image, num_inference_steps=10, image_guidance_scale=1).images
-    image_path = "output.png"
-    images[0].save(image_path)
+    
+    # Save the generated image
+    output_path = "/tmp/output.png"  # Use a temporary path for Vercel
+    images[0].save(output_path)
 
-    return jsonify({"message": "Image generated successfully", "image_url": image_path})
+    return jsonify({"message": "Image generated successfully", "image_url": output_path})
+
+@app.route('/output', methods=['GET'])
+def get_image():
+    return send_file("/tmp/output.png", mimetype='image/png')
+
+@app.route('/')
+def index():
+    return "Welcome to the Image Generator API!"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
