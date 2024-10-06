@@ -5,13 +5,13 @@
     <body>
         <h1>Generate an Image</h1>
         <button onclick="generateImage()">Generate</button>
-        <img id="result" style="margin-top: 20px;"/>
+        <img id="result" style="margin-top: 20px;" src="{{ image_url and '/static/' + image_url }}" alt="Generated Image" />
         <script>
             async function generateImage() {
                 const response = await fetch('/generate');
                 const data = await response.json();
                 const img = document.getElementById('result');
-                img.src = data.image_url;
+                img.src = '/static/output.png';  // Set the image source directly after generation
             }
         </script>
     </body>
