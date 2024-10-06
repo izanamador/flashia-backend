@@ -1,3 +1,6 @@
-Flask
-pymongo
-Werkzeug
+fastapi
+uvicorn
+torch
+diffusers[torch]
+Pillow
+requests
