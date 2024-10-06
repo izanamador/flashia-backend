@@ -1,42 +1,21 @@
-from flask import Flask, render_template, request, send_from_directory
-import os
-from werkzeug.utils import secure_filename
+import PIL
+import requests
+import torch
+from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = '/tmp'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+model_id = "timbrooks/instruct-pix2pix"
+pipe = StableDiffusionInstructPix2PixPipeline.from_pretrained(model_id, torch_dtype=torch.float16, safety_checker=None)
+pipe.to("cuda")
+pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 
-@app.route('/')
-def index():
-    return "Flashia is running!"
+url = "https://media.licdn.com/dms/image/v2/D4D03AQFzQHQUzhq8CQ/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1701027419177?e=1733356800&v=beta&t=AWUZgv2LLUTlaCzM9QaiXvOf3GqEYFVYhhJIf4ESrKM"
+def download_image(url):
+    image = PIL.Image.open(requests.get(url, stream=True).raw)
+    image = PIL.ImageOps.exif_transpose(image)
+    image = image.convert("RGB")
+    return image
+image = download_image(url)
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return 'No file part'
-        file = request.files['file']
-        if file.filename == '':
-            return 'No selected file'
-        if file:
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
-            return render_template('index.html', filename=filename)
-    return render_template('index.html')
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-@app.route('/debug')
-def debug():
-    return {
-        "env": dict(os.environ),
-        "pwd": os.getcwd(),
-        "files": os.listdir(),
-        "templates": os.listdir("templates") if os.path.exists("templates") else "No templates directory"
-    }
-
-if __name__ == '__main__':
-    app.run(debug=True)
+prompt = "turn him into a picasso portrait, cubism style"
+images = pipe(prompt, image=image, num_inference_steps=15, image_guidance_scale=1).images
+images[0]
