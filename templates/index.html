@@ -1,0 +1,18 @@
+<html>
+    <head>
+        <title>Image Generation</title>
+    </head>
+    <body>
+        <h1>Generate an Image</h1>
+        <button onclick="generateImage()">Generate</button>
+        <img id="result" style="margin-top: 20px;"/>
+        <script>
+            async function generateImage() {
+                const response = await fetch('/generate');
+                const data = await response.json();
+                const img = document.getElementById('result');
+                img.src = data.image_url;
+            }
+        </script>
+    </body>
+</html>

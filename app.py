@@ -1,11 +1,15 @@
 import PIL
 import requests
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from diffusers import StableDiffusionInstructPix2PixPipeline, EulerAncestralDiscreteScheduler
 
 app = FastAPI()
+
+# Set up Jinja2 templates
+templates = Jinja2Templates(directory="templates")
 
 # Load the model
 model_id = "timbrooks/instruct-pix2pix"
@@ -22,27 +26,8 @@ def download_image(url):
     return image
 
 @app.get("/", response_class=HTMLResponse)
-async def home():
-    return """
-    <html>
-        <head>
-            <title>Image Generation</title>
-        </head>
-        <body>
-            <h1>Generate an Image</h1>
-            <button onclick="generateImage()">Generate</button>
-            <img id="result" style="margin-top: 20px;"/>
-            <script>
-                async function generateImage() {
-                    const response = await fetch('/generate');
-                    const data = await response.json();
-                    const img = document.getElementById('result');
-                    img.src = data.image_url;
-                }
-            </script>
-        </body>
-    </html>
-    """
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.get("/generate")
 async def generate():
