@@ -1,18 +1,21 @@
-<html>
-    <head>
-        <title>Image Generation</title>
-    </head>
-    <body>
-        <h1>Generate an Image</h1>
-        <button onclick="generateImage()">Generate</button>
-        <img id="result" style="margin-top: 20px;" src="{{ image_url and '/static/' + image_url }}" alt="Generated Image" />
-        <script>
-            async function generateImage() {
-                const response = await fetch('/generate');
-                const data = await response.json();
-                const img = document.getElementById('result');
-                img.src = '/static/output.png';  // Set the image source directly after generation
-            }
-        </script>
-    </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastAPI Logging Example</title>
+</head>
+<body>
+    <h1>FastAPI Logging Example</h1>
+    <button onclick="generateImage()">Generate Image</button>
+    <div id="message"></div>
+
+    <script>
+        async function generateImage() {
+            const response = await fetch('/generate');
+            const data = await response.json();
+            document.getElementById('message').innerText = data.message;
+        }
+    </script>
+</body>
 </html>
